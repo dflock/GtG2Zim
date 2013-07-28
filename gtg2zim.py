@@ -20,6 +20,7 @@ Options:
 from docopt import docopt
 import os
 from datetime import datetime
+import xml.etree.ElementTree as et
 
 
 def create_zim_notebook(name, output_path):
@@ -44,19 +45,39 @@ def create_zim_notebook(name, output_path):
 
 def gtg2zim(tag, input_path, output_path):
     print tag, output_path, input_path
-    create_zim_notebook('Test Notebook', output_path)
+    # create_zim_notebook('Test Notebook', output_path)
 
     # Check for existence of gtg files in input_path:
     #   tags.xml
     #   projects.xml
     #   gtg_tasks-*.xml
-    #
+
+    try:
+        tags = open(os.path.join(input_path, 'tags.xml'))
+    except IOError as e:
+        print("({})".format(e))
+
+    try:
+        projects = open(os.path.join(input_path, 'projects.xml'))
+    except IOError as e:
+        print("({})".format(e))
+
     # Read in tags.xml
-    # For each tag, create a ZIM Notebook in the output folder.
+    # For each tag:
+    #   Create a ZIM Notebook in the output folder.
+    tree = et.parse(tags)
+    root = tree.getroot()
+    for child in root:
+        create_zim_notebook(child.attrib['name'].replace('@', ''), output_path)
+
     #
-    # Read in gtg projects.xml file
+    #   Read in gtg projects.xml file
     #
-    # For each <backend..> where module="backend_localfile", read in the file pointed to by the path attribute
+    #   For each <backend..> where module="backend_localfile", read in the file pointed to by the path attribute
+    #
+    #   For each task that matches the current tag:
+    #       Create a Zim page in the notebook
+    #       Figure out what to do about subtasks.
 
 if __name__ == '__main__':
     args = docopt(__doc__, version='GtG2Zim 0.1')
